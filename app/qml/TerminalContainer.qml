@@ -18,7 +18,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 import QtQuick 2.2
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import "utils.js" as Utils
 
@@ -61,10 +61,15 @@ ShaderTerminal {
         width: parent.width * appSettings.bloomQuality
         height: parent.height * appSettings.bloomQuality
 
-        sourceComponent: FastBlur {
-            radius: Utils.lint(16, 64, appSettings.bloomQuality)
+        sourceComponent: MultiEffect {
             source: terminal.mainSource
-            transparentBorder: true
+            blurEnabled: true
+            blur: 1.0
+            blurMax: Math.round(Utils.lint(16, 64, appSettings.bloomQuality))
+            // Padding would make MultiEffect re-layer the source, and
+            // mainSource is an invisible ShaderEffectSource, so it must be
+            // sampled directly as a texture provider.
+            autoPaddingEnabled: false
         }
     }
     Loader {

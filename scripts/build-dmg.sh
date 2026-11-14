@@ -13,19 +13,23 @@ if [ -z "$VERSION" ]; then
     VERSION="unknown"
 fi
 
-if ! command -v qmake >/dev/null; then
-    echo "qmake not found in PATH." >&2
+if ! command -v cmake >/dev/null; then
+    echo "cmake not found in PATH." >&2
     exit 1
 fi
-QT_DIR="${QT_DIR:-$(qmake -query QT_INSTALL_PREFIX)}"
+QT_DIR="${QT_DIR:-${QT_ROOT_DIR:-$(qmake -query QT_INSTALL_PREFIX 2>/dev/null || true)}}"
+if [ -z "$QT_DIR" ]; then
+    echo "Set QT_DIR to the Qt installation prefix." >&2
+    exit 1
+fi
 QT_BIN="${QT_DIR%/}/bin"
 
 mkdir -p "$BUILD_DIR"
 rm -f "$BUILD_DIR/${APP%.app}.dmg"
 pushd "$BUILD_DIR"
 
-"$QT_BIN/qmake" CONFIG+=release "$REPO_ROOT/cool-retro-term.pro"
-make -j"$JOBS"
+cmake -S "$REPO_ROOT" -B . -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$QT_DIR"
+cmake --build . -j"$JOBS"
 
 PLUGIN_DST="$APP/Contents/PlugIns/qmltermwidget"
 rm -rf "$PLUGIN_DST"

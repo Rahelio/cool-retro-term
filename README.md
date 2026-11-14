@@ -27,4 +27,16 @@ Alternatively, most distributions such as Ubuntu, Fedora or Arch already package
 
 ## Building
 
-Check out the wiki and follow the instructions on how to build it on [Linux](https://github.com/Swordfish90/cool-retro-term/wiki/Build-Instructions-(Linux)) and [macOS](https://github.com/Swordfish90/cool-retro-term/wiki/Build-Instructions-(macOS)).
+cool-retro-term is built with CMake and requires Qt 6.5 or newer with the Qt Declarative (Qt Quick, Qt Quick Controls), Qt Shader Tools and Qt SQL modules.
+
+```sh
+git clone --recursive https://github.com/Swordfish90/cool-retro-term.git
+cd cool-retro-term
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+./build/cool-retro-term
+```
+
+If you already cloned without `--recursive`, run `git submodule update --init --recursive` first. To install system-wide, configure with `-DCMAKE_INSTALL_PREFIX=/usr` and run `sudo cmake --install build`. If Qt is not in a standard location, pass `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.x/<platform>`.
+
+`scripts/build-appimage.sh` and `scripts/build-dmg.sh` produce the Linux AppImage and macOS DMG release packages.

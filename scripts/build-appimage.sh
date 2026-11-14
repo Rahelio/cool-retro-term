@@ -11,36 +11,33 @@ if [ -z "$VERSION" ]; then
     VERSION="unknown"
 fi
 
-if ! command -v qmake >/dev/null; then
-    echo "qmake not found in PATH." >&2
+if ! command -v cmake >/dev/null; then
+    echo "cmake not found in PATH." >&2
     exit 1
 fi
-QTDIR="$(qmake -query QT_INSTALL_PREFIX)"
-QT_INSTALL_QML="$(qmake -query QT_INSTALL_QML)"
 
 APPDIR="$BUILD_DIR/AppDir"
+CMAKE_BUILD_DIR="$BUILD_DIR/cmake"
 
 mkdir -p "$BUILD_DIR"
 rm -rf "$APPDIR"
-pushd "$BUILD_DIR"
 
-qmake "$REPO_ROOT/cool-retro-term.pro"
-make -j"$(nproc)"
+CMAKE_ARGS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr)
+if [ -n "${QT_ROOT_DIR:-}" ]; then
+    CMAKE_ARGS+=("-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR")
+fi
 
-# Install targets from subprojects (the top-level install only installs the desktop file).
-make -C app install INSTALL_ROOT="$APPDIR"
-make -C qmltermwidget install INSTALL_ROOT="$APPDIR"
-make install INSTALL_ROOT="$APPDIR"
-
-popd
+cmake -S "$REPO_ROOT" -B "$CMAKE_BUILD_DIR" "${CMAKE_ARGS[@]}"
+cmake --build "$CMAKE_BUILD_DIR" -j"$(nproc)"
+DESTDIR="$APPDIR" cmake --install "$CMAKE_BUILD_DIR"
 
 # Relocate QMLTermWidget into the standard AppDir QML import path.
-QML_ROOT="$APPDIR$QT_INSTALL_QML"
-if [ -d "$QML_ROOT" ]; then
+QMLTERMWIDGET_DIR="$(find "$APPDIR" -type d -name QMLTermWidget -print -quit)"
+if [ -n "$QMLTERMWIDGET_DIR" ] && [ "$QMLTERMWIDGET_DIR" != "$APPDIR/usr/qml/QMLTermWidget" ]; then
     mkdir -p "$APPDIR/usr/qml"
-    rsync -a "$QML_ROOT/" "$APPDIR/usr/qml/"
-    rm -rf "$QML_ROOT"
-    QML_PARENT="$(dirname "$QML_ROOT")"
+    rsync -a "$QMLTERMWIDGET_DIR" "$APPDIR/usr/qml/"
+    rm -rf "$QMLTERMWIDGET_DIR"
+    QML_PARENT="$(dirname "$QMLTERMWIDGET_DIR")"
     while [ "$QML_PARENT" != "$APPDIR" ] && rmdir "$QML_PARENT" 2>/dev/null; do
         QML_PARENT="$(dirname "$QML_PARENT")"
     done
