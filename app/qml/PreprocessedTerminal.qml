@@ -49,7 +49,7 @@ Item{
     Connections {
         target: copyAction
 
-        onTriggered: {
+        function onTriggered() {
             if (terminalContainer.isActive) {
                 kterminal.copyClipboard()
             }
@@ -58,7 +58,7 @@ Item{
     Connections {
         target: pasteAction
 
-        onTriggered: {
+        function onTriggered() {
             if (terminalContainer.isActive) {
                 kterminal.pasteClipboard()
             }
@@ -69,22 +69,22 @@ Item{
     Connections {
         target: appSettings
 
-        onFontScalingChanged: {
+        function onFontScalingChanged() {
             terminalContainer.updateSources()
         }
 
-        onFontWidthChanged: {
+        function onFontWidthChanged() {
             terminalContainer.updateSources()
         }
     }
     Connections {
         target: terminalContainer
 
-        onWidthChanged: {
+        function onWidthChanged() {
             terminalContainer.updateSources()
         }
 
-        onHeightChanged: {
+        function onHeightChanged() {
             terminalContainer.updateSources()
         }
     }
@@ -161,7 +161,7 @@ Item{
         Connections {
             target: appSettings
 
-            onWindowScalingChanged: {
+            function onWindowScalingChanged() {
                 scaleTexture = Math.max(1.0, Math.floor(terminalContainer.screenScaling * appSettings.windowScaling));
             }
         }

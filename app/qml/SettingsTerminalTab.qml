@@ -106,11 +106,11 @@ ColumnLayout {
                 Connections {
                     target: appSettings.fontManager
 
-                    onTerminalFontChanged: {
+                    function onTerminalFontChanged() {
                         fontChanger.updateIndex()
                     }
 
-                    onFilteredFontListChanged: {
+                    function onFilteredFontListChanged() {
                         fontChanger.updateIndex()
                     }
                 }
