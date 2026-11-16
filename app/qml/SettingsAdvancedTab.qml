@@ -85,7 +85,9 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.columnSpan: 2
                 id: effectsFpsSlider
-                onValueChanged: appSettings.effectsFrameSkip = Math.round(value)
+                // Write back only on user interaction: the slider clamps
+                // out-of-range stored values, which would otherwise loop.
+                onMoved: appSettings.effectsFrameSkip = Math.round(value)
                 stepSize: 1
                 enabled: true
                 from: 5
