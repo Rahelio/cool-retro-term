@@ -92,6 +92,21 @@ target_link_libraries(qmltermwidget PRIVATE
     Qt6::Widgets
 )
 
+# Character widths: utf8proc gives locale-independent widths matching tmux;
+# without it the C library's wcwidth() is used.
+option(USE_UTF8PROC "Use utf8proc for character width calculation" ON)
+if(USE_UTF8PROC)
+    list(APPEND CMAKE_MODULE_PATH "${QTW_DIR}/cmake")
+    find_package(Utf8Proc)
+    if(UTF8PROC_FOUND)
+        target_compile_definitions(qmltermwidget PRIVATE HAVE_UTF8PROC)
+        target_include_directories(qmltermwidget PRIVATE ${UTF8PROC_INCLUDE_DIRS})
+        target_link_libraries(qmltermwidget PRIVATE ${UTF8PROC_LIBRARIES})
+    else()
+        message(STATUS "utf8proc not found; character widths will use wcwidth()")
+    endif()
+endif()
+
 set_target_properties(qmltermwidget PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${QTW_OUTPUT_DIR}"
 )
