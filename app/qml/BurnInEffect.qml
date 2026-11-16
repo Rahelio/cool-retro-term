@@ -18,6 +18,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 import QtQuick 2.0
+import QtQuick.Window 2.0
 
 import "utils.js" as Utils
 
@@ -25,7 +26,20 @@ Loader {
     id: burnInEffect
 
     property ShaderEffectSource effectSource: item ? item.source : null
+
+    // The burn-in layer renders into itself (recursive ShaderEffectSource).
+    // Resizing a recursive layer frees a texture the GPU may still be reading,
+    // which corrupts memory (crashes on resize, GPU page faults on Vulkan).
+    // So the layer gets an explicit pixel size, and recursion is switched off
+    // whenever that size changes, re-enabled once it has been stable.
+    readonly property size layerTextureSize: Qt.size(Math.ceil(width * Screen.devicePixelRatio),
+                                                     Math.ceil(height * Screen.devicePixelRatio))
     property bool resizing: false
+
+    onLayerTextureSizeChanged: {
+        resizing = true
+        resizeTimer.restart()
+    }
 
     property real lastUpdate: 0
     property real prevLastUpdate: 0
@@ -64,8 +78,9 @@ Loader {
             anchors.fill: parent
 
             sourceItem: burnInShaderEffect
+            textureSize: burnInEffect.layerTextureSize
             live: false
-            recursive: !resizing
+            recursive: !burnInEffect.resizing
             hideSource: true
             wrapMode: ShaderEffectSource.ClampToEdge
 
@@ -77,7 +92,7 @@ Loader {
             Connections {
                 target: kterminal
 
-                onImagePainted: {
+                function onImagePainted() {
                     completelyUpdate()
                 }
             }
@@ -85,7 +100,7 @@ Loader {
             Connections {
                 target: appSettings.fontManager
 
-                onTerminalFontChanged: {
+                function onTerminalFontChanged() {
                     burnInEffect.restartBlurSource()
                 }
             }
@@ -93,15 +108,15 @@ Loader {
             Connections {
                 target: appSettings
 
-                onBurnInChanged: {
+                function onBurnInChanged() {
                     burnInEffect.restartBlurSource()
                 }
 
-                onRasterizationChanged: {
+                function onRasterizationChanged() {
                     burnInEffect.restartBlurSource()
                 }
 
-                onBurnInQualityChanged: {
+                function onBurnInQualityChanged() {
                     burnInEffect.restartBlurSource()
                 }
             }
@@ -126,16 +141,6 @@ Loader {
 
             onStatusChanged: if (log) console.log(log) //Print warning messages
         }
-    }
-
-    onWidthChanged: {
-        resizing = true
-        resizeTimer.restart()
-    }
-
-    onHeightChanged: {
-        resizing = true
-        resizeTimer.restart()
     }
 
     Timer {
