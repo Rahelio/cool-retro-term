@@ -25,7 +25,7 @@ QtObject {
     id: appRoot
 
     property ApplicationSettings appSettings: ApplicationSettings {
-        onInitializedSettings: appRoot.createWindow()
+        onInitializedSettings: appRoot.createWindow(launchOptions)
     }
 
     property TimeManager timeManager: TimeManager {
@@ -46,14 +46,27 @@ QtObject {
 
     property ListModel windowsModel: ListModel { }
 
-    function createWindow() {
-        var window = windowComponent.createObject(null)
+    // options: see parseLaunchOptions() in main.cpp. Missing keys mean defaults.
+    function createWindow(options) {
+        var launch = options || {}
+        var window = windowComponent.createObject(null, { launchOptions: launch })
         if (!window)
             return
 
         windowsModel.append({ window: window })
         window.show()
+        if (launch.fullscreen)
+            window.fullscreen = true
         window.requestActivate()
+    }
+
+    // Called from main.cpp when another launch is forwarded to this instance.
+    function openLaunchWindow(options) {
+        var launch = options || {}
+        // Profiles are shared by all windows, so this changes the open ones too.
+        if (launch.profile)
+            appSettings.loadProfileByName(launch.profile)
+        createWindow(launch)
     }
 
     function closeWindow(window) {

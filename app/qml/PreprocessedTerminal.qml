@@ -167,21 +167,22 @@ Item{
         }
 
         function startSession() {
-            // Retrieve the variable set in main.cpp if arguments are passed.
-            if (defaultCmd) {
-                ksession.setShellProgram(defaultCmd);
-                ksession.setArgs(defaultCmdArgs);
+            var options = terminalWindow.takeSessionOptions();
+
+            if (options.command) {
+                ksession.setShellProgram(options.command);
+                ksession.setArgs(options.args);
             } else if (appSettings.useCustomCommand) {
                 var args = Utils.tokenizeCommandLine(appSettings.customCommand);
                 ksession.setShellProgram(args[0]);
                 ksession.setArgs(args.slice(1));
-            } else if (!defaultCmd && appSettings.isMacOS) {
+            } else if (appSettings.isMacOS) {
                 // OSX Requires the following default parameters for auto login.
                 ksession.setArgs(["-i", "-l"]);
             }
 
-            if (workdir)
-                ksession.initialWorkingDirectory = workdir;
+            if (options.workdir)
+                ksession.initialWorkingDirectory = options.workdir;
 
             ksession.startShellProgram();
             forceActiveFocus();

@@ -850,26 +850,29 @@ QtObject {
         return -1
     }
 
+    function loadProfileByName(name) {
+        var profileIndex = getProfileIndexByName(name)
+        if (profileIndex === -1) {
+            console.log("Warning: selected profile is not valid; ignoring it")
+            return false
+        }
+        loadProfile(profileIndex)
+        return true
+    }
+
     Component.onCompleted: {
         // Manage the arguments from the QML side.
-        var args = Qt.application.arguments
-        if (args.indexOf("--verbose") !== -1) {
+        if (launchOptions.verbose) {
             verbose = true
         }
-        if (args.indexOf("--default-settings") === -1) {
+        if (!launchOptions.defaultSettings) {
             loadSettings()
         }
 
         loadCustomProfiles()
 
-        var profileArgPosition = args.indexOf("--profile")
-        if (profileArgPosition !== -1) {
-            var profileIndex = getProfileIndexByName(args[profileArgPosition + 1])
-            if (profileIndex !== -1) {
-                loadProfile(profileIndex)
-            } else {
-                console.log("Warning: selected profile is not valid; ignoring it")
-            }
+        if (launchOptions.profile) {
+            loadProfileByName(launchOptions.profile)
         }
 
         initializedSettings()

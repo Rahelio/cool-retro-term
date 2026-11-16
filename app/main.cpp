@@ -14,6 +14,8 @@
 #include <kdsingleapplication.h>
 
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <stdlib.h>
 
 #include <QLoggingCategory>
@@ -28,15 +30,47 @@
 #include <QMenu>
 #endif
 
-QString getNamedArgument(QStringList args, QString name, QString defaultName)
+static QString getNamedArgument(const QStringList &args, const QStringList &names, const QString &defaultValue = QString())
 {
-    int index = args.indexOf(name);
-    return (index != -1) ? args[index + 1] : QString(defaultName);
+    for (const QString &name : names) {
+        int index = args.indexOf(name);
+        if (index != -1 && index + 1 < args.size())
+            return args[index + 1];
+    }
+    return defaultValue;
 }
 
-QString getNamedArgument(QStringList args, QString name)
+// Options for the window opened by this launch. Everything after "-e" belongs
+// to the command, so application options are only looked for before it.
+// The map is passed to QML (appRoot.createWindow) and, when another instance
+// is already running, sent to it as JSON.
+static QVariantMap parseLaunchOptions(const QStringList &arguments, const QString &currentDir)
 {
-    return getNamedArgument(args, name, "");
+    QVariantMap options;
+
+    QStringList appArgs = arguments;
+    int commandIndex = arguments.indexOf("-e");
+    if (commandIndex != -1) {
+        appArgs = arguments.mid(0, commandIndex);
+        QStringList commandLine = arguments.mid(commandIndex + 1);
+        if (!commandLine.isEmpty()) {
+            options["command"] = commandLine.takeFirst();
+            options["args"] = commandLine;
+        }
+    }
+
+    QString workdir = getNamedArgument(appArgs, {"--workdir"}, currentDir);
+    options["workdir"] = QDir(currentDir).absoluteFilePath(workdir);
+
+    QString profile = getNamedArgument(appArgs, {"-p", "--profile"});
+    if (!profile.isEmpty())
+        options["profile"] = profile;
+
+    options["fullscreen"] = appArgs.contains("--fullscreen");
+    options["defaultSettings"] = appArgs.contains("--default-settings");
+    options["verbose"] = appArgs.contains("--verbose");
+
+    return options;
 }
 
 int main(int argc, char *argv[])
@@ -64,13 +98,14 @@ int main(int argc, char *argv[])
 
     if (argc>1 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help"))) {
         QTextStream cout(stdout, QIODevice::WriteOnly);
-        cout << "Usage: " << argv[0] << " [--default-settings] [--workdir <dir>] [--program <prog>] [-p|--profile <prof>] [--fullscreen] [-h|--help]" << Qt::endl;
+        cout << "Usage: " << argv[0] << " [--default-settings] [--workdir <dir>] [-p|--profile <prof>] [--fullscreen] [--verbose] [-h|--help] [-v|--version] [-e <cmd> [args...]]" << Qt::endl;
         cout << "  --default-settings  Run cool-retro-term with the default settings" << Qt::endl;
         cout << "  --workdir <dir>     Change working directory to 'dir'" << Qt::endl;
         cout << "  -e <cmd>            Command to execute. This option will catch all following arguments, so use it as the last option." << Qt::endl;
         cout << "  --fullscreen        Run cool-retro-term in fullscreen." << Qt::endl;
         cout << "  -p|--profile <prof> Run cool-retro-term with the given profile." << Qt::endl;
         cout << "  -h|--help           Print this help." << Qt::endl;
+        cout << "  -v|--version        Print the version." << Qt::endl;
         cout << "  --verbose           Print additional information such as profiles and settings." << Qt::endl;
         return 0;
     }
@@ -90,10 +125,13 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain(QStringLiteral("cool-retro-term"));
     app.setApplicationVersion(appVersion);
 
+    const QVariantMap launchOptions = parseLaunchOptions(app.arguments(), QDir::currentPath());
+
     KDSingleApplication singleApp(QStringLiteral("cool-retro-term"));
 
     if (!singleApp.isPrimaryInstance()) {
-        if (singleApp.sendMessage("new-window"))
+        QByteArray message = QJsonDocument(QJsonObject::fromVariantMap(launchOptions)).toJson(QJsonDocument::Compact);
+        if (singleApp.sendMessage(message))
             return 0;
         qWarning() << "KDSingleApplication: primary not reachable, continuing as independent instance.";
     }
@@ -113,21 +151,8 @@ int main(int argc, char *argv[])
     app.setWindowIcon(QIcon(":../icons/32x32/cool-retro-term.png"));
 #endif
 
-    // Manage command line arguments from the cpp side
-    QStringList args = app.arguments();
-
-    // Manage default command
-    QStringList cmdList;
-    if (args.contains("-e")) {
-        cmdList << args.mid(args.indexOf("-e") + 1);
-    }
-    QVariant command(cmdList.empty() ? QVariant() : cmdList[0]);
-    QVariant commandArgs(cmdList.size() <= 1 ? QVariant() : QVariant(cmdList.mid(1)));
     engine.rootContext()->setContextProperty("appVersion", appVersion);
-    engine.rootContext()->setContextProperty("defaultCmd", command);
-    engine.rootContext()->setContextProperty("defaultCmdArgs", commandArgs);
-
-    engine.rootContext()->setContextProperty("workdir", getNamedArgument(args, "--workdir", QDir::currentPath()));
+    engine.rootContext()->setContextProperty("launchOptions", launchOptions);
     engine.rootContext()->setContextProperty("fileIO", &fileIO);
 
     // Manage import paths for Linux and OSX.
@@ -147,23 +172,25 @@ int main(int argc, char *argv[])
     // Quit the application when the engine closes.
     QObject::connect((QObject*) &engine, SIGNAL(quit()), (QObject*) &app, SLOT(quit()));
 
-    auto requestNewWindow = [&engine]() {
+    auto requestNewWindow = [&engine](const QVariantMap &options) {
         if (engine.rootObjects().isEmpty())
             return;
 
         QObject *rootObject = engine.rootObjects().constFirst();
-        QMetaObject::invokeMethod(rootObject, "createWindow", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(rootObject, "openLaunchWindow", Qt::QueuedConnection,
+                                  Q_ARG(QVariant, QVariant(options)));
     };
 
     QObject::connect(&singleApp, &KDSingleApplication::messageReceived, &app,
                      [&requestNewWindow](const QByteArray &message) {
-        if (message.isEmpty() || message == QByteArray("new-window"))
-            requestNewWindow();
+        // Older versions send a bare "new-window"; that still opens a default window.
+        QJsonDocument document = QJsonDocument::fromJson(message);
+        requestNewWindow(document.isObject() ? document.object().toVariantMap() : QVariantMap());
     });
 
 #if defined(Q_OS_MAC)
     QMenu *dockMenu = new QMenu(nullptr);
-    dockMenu->addAction(QObject::tr("New Window"), [&requestNewWindow]() { requestNewWindow(); });
+    dockMenu->addAction(QObject::tr("New Window"), [&requestNewWindow]() { requestNewWindow(QVariantMap()); });
     dockMenu->setAsDockMenu();
 #endif
 

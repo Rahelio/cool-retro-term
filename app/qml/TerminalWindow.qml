@@ -39,6 +39,22 @@ ApplicationWindow {
 
     visible: false
 
+    // Options this window was opened with (see parseLaunchOptions() in main.cpp).
+    property var launchOptions: ({})
+    property bool launchCommandUsed: false
+
+    // Options for a new session in this window: the launch command runs only in
+    // the first tab, while the working directory applies to every tab.
+    function takeSessionOptions() {
+        var options = { workdir: launchOptions.workdir || "" }
+        if (!launchCommandUsed && launchOptions.command) {
+            options.command = launchOptions.command
+            options.args = launchOptions.args || []
+            launchCommandUsed = true
+        }
+        return options
+    }
+
     property bool fullscreen: false
     onFullscreenChanged: visibility = (fullscreen ? Window.FullScreen : Window.Windowed)
 
