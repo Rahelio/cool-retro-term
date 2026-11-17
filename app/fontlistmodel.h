@@ -2,6 +2,7 @@
 #define FONTLISTMODEL_H
 
 #include <QAbstractListModel>
+#include <QtQml/qqmlregistration.h>
 #include <QVector>
 #include <QVariant>
 #include <QVariantMap>
@@ -23,6 +24,8 @@ struct FontEntry
 class FontListModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("FontListModel is created by FontManager")
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:

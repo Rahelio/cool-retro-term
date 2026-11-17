@@ -21,8 +21,6 @@
 #include <QLoggingCategory>
 
 #include <fileio.h>
-#include <fontlistmodel.h>
-#include <fontmanager.h>
 
 #if defined(Q_OS_MAC)
 #include <CoreFoundation/CoreFoundation.h>
@@ -139,16 +137,13 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     FileIO fileIO;
 
-    qmlRegisterType<FontManager>("CoolRetroTerm", 1, 0, "FontManager");
-    qmlRegisterUncreatableType<FontListModel>("CoolRetroTerm", 1, 0, "FontListModel", "FontListModel is created by FontManager");
-
 #if !defined(Q_OS_MAC)
-    app.setWindowIcon(QIcon::fromTheme("cool-retro-term", QIcon(":../icons/32x32/cool-retro-term.png")));
+    app.setWindowIcon(QIcon::fromTheme("cool-retro-term", QIcon(":/icons/cool-retro-term.png")));
 #if defined(Q_OS_LINUX)
     QGuiApplication::setDesktopFileName(QStringLiteral("cool-retro-term"));
 #endif
 #else
-    app.setWindowIcon(QIcon(":../icons/32x32/cool-retro-term.png"));
+    app.setWindowIcon(QIcon(":/icons/cool-retro-term.png"));
 #endif
 
     engine.rootContext()->setContextProperty("appVersion", appVersion);
@@ -162,7 +157,7 @@ int main(int argc, char *argv[])
     importPathList.append(QCoreApplication::applicationDirPath() + "/../../../qmltermwidget");
     engine.setImportPathList(importPathList);
 
-    engine.load(QUrl(QStringLiteral ("qrc:/main.qml")));
+    engine.loadFromModule("CoolRetroTerm", "Main");
 
     if (engine.rootObjects().isEmpty()) {
         qDebug() << "Cannot load QML interface";

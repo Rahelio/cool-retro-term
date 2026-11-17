@@ -20,7 +20,6 @@ qt_add_executable(cool-retro-term MACOSX_BUNDLE
     fileio.cpp fileio.h
     fontmanager.cpp fontmanager.h
     fontlistmodel.cpp fontlistmodel.h
-    qml/resources.qrc
 
     ${KDSA_DIR}/kdsingleapplication.cpp
     ${KDSA_DIR}/kdsingleapplication.h
@@ -65,6 +64,105 @@ if(APPLE)
 endif()
 
 add_dependencies(cool-retro-term qmltermwidget)
+
+# QML /////////////////////////////////////////////////////////////////////////
+# The interface is the CoolRetroTerm QML module, served from
+# qrc:/qt/qml/CoolRetroTerm/. Files keep their paths relative to qml/.
+
+set(QML_FILES
+    Main.qml
+    AboutDialog.qml
+    ApplicationSettings.qml
+    BurnInEffect.qml
+    CheckableSlider.qml
+    ColorButton.qml
+    InsertNameDialog.qml
+    PreprocessedTerminal.qml
+    SettingsAdvancedTab.qml
+    SettingsEffectsTab.qml
+    SettingsGeneralTab.qml
+    SettingsTerminalTab.qml
+    SettingsWindow.qml
+    ShaderTerminal.qml
+    SimpleSlider.qml
+    SizeOverlay.qml
+    Storage.qml
+    TerminalContainer.qml
+    TerminalFrame.qml
+    TerminalTabs.qml
+    TerminalWindow.qml
+    TimeManager.qml
+    utils.js
+    Components/SizedLabel.qml
+    menus/FullContextMenu.qml
+    menus/ShortContextMenu.qml
+    menus/WindowMenu.qml
+)
+set(QML_RESOURCES
+    images/allNoise512.png
+    images/crt256.png
+)
+
+list(TRANSFORM QML_FILES PREPEND "qml/" OUTPUT_VARIABLE QML_FILE_PATHS)
+list(TRANSFORM QML_RESOURCES PREPEND "qml/" OUTPUT_VARIABLE QML_RESOURCE_PATHS)
+foreach(file IN LISTS QML_FILES QML_RESOURCES)
+    set_source_files_properties("qml/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
+endforeach()
+
+# Generate qmldir files for Components/ and menus/ too (Qt 6.8+).
+if(QT_KNOWN_POLICY_QTP0004)
+    qt_policy(SET QTP0004 NEW)
+endif()
+
+qt_add_qml_module(cool-retro-term
+    URI CoolRetroTerm
+    VERSION 1.0
+    QML_FILES ${QML_FILE_PATHS}
+    RESOURCES ${QML_RESOURCE_PATHS}
+    SOURCES
+        fontmanager.cpp fontmanager.h
+        fontlistmodel.cpp fontlistmodel.h
+)
+
+# Bundled fonts (FontManager loads them from :/fonts/) and the window icon.
+set(FONT_FILES
+    fonts/apple2/PrintChar21.ttf
+    fonts/atari-400-800/AtariClassic-Regular.ttf
+    fonts/bigblue-terminal/BigBlueTerm437NerdFontMono-Regular.ttf
+    fonts/cozette/CozetteVector.ttf
+    fonts/departure-mono/DepartureMonoNerdFontMono-Regular.otf
+    fonts/fira-code/FiraCodeNerdFontMono-Regular.ttf
+    fonts/fixedsys-excelsior/FSEX301-L2.ttf
+    fonts/gohu/GohuFont11NerdFontMono-Regular.ttf
+    fonts/greybeard/Greybeard-16px.ttf
+    fonts/hack/HackNerdFontMono-Regular.ttf
+    fonts/ibm-3278/3270NerdFontMono-Regular.ttf
+    fonts/iosevka/IosevkaTermNerdFontMono-Regular.ttf
+    fonts/jetbrains-mono/JetBrainsMonoNerdFontMono-Regular.ttf
+    fonts/oldschool-pc-fonts/PxPlus_IBM_EGA_8x8.ttf
+    fonts/oldschool-pc-fonts/PxPlus_IBM_VGA8.ttf
+    fonts/oldschool-pc-fonts/PxPlus_IBM_VGA_8x16.ttf
+    fonts/opendyslexic/OpenDyslexicMNerdFontMono-Regular.otf
+    fonts/pet-me/PetMe.ttf
+    fonts/pet-me/PetMe64.ttf
+    fonts/source-code-pro/SauceCodeProNerdFontMono-Regular.ttf
+    fonts/terminus/TerminessNerdFontMono-Regular.ttf
+    fonts/unscii/unscii-16-full.ttf
+    fonts/unscii/unscii-8-thin.ttf
+    fonts/unscii/unscii-8.ttf
+)
+list(TRANSFORM FONT_FILES PREPEND "qml/" OUTPUT_VARIABLE FONT_FILE_PATHS)
+qt_add_resources(cool-retro-term "fonts"
+    PREFIX "/"
+    BASE qml
+    FILES ${FONT_FILE_PATHS}
+)
+set_source_files_properties(icons/32x32/cool-retro-term.png
+    PROPERTIES QT_RESOURCE_ALIAS icons/cool-retro-term.png)
+qt_add_resources(cool-retro-term "icon"
+    PREFIX "/"
+    FILES icons/32x32/cool-retro-term.png
+)
 
 # SHADERS /////////////////////////////////////////////////////////////////////
 # Compiled with qsb at build time and embedded under qrc:/shaders/.

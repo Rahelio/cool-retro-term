@@ -2,6 +2,7 @@
 #define FONTMANAGER_H
 
 #include <QObject>
+#include <QtQml/qqmlregistration.h>
 #include <QStringList>
 #include <QHash>
 #include <QSet>
@@ -11,6 +12,7 @@
 class FontManager : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(FontListModel *fontList READ fontList CONSTANT)
     Q_PROPERTY(FontListModel *filteredFontList READ filteredFontList NOTIFY filteredFontListChanged)
     Q_PROPERTY(int fontSource READ fontSource WRITE setFontSource NOTIFY fontSourceChanged)

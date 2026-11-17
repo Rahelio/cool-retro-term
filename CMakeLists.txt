@@ -19,7 +19,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Widgets
 )
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 set(CMAKE_AUTORCC ON)
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/qmltermwidget/lib/Session.cpp"
