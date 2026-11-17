@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Markus S. <kamikazow@web.de> -->
+<component type="desktop-application">
+  <id>cool-retro-term.desktop</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Cool Retro Term</name>
+  <summary>Terminal emulator with an old school look and feel</summary>
+  <developer id="io.github.swordfish90">
+    <name>Filippo Scognamiglio</name>
+  </developer>
+
+  <description>
+    <p>
+      cool-retro-term is a terminal emulator which mimics the look and feel of the old cathode tube screens.
+      It has been designed to be eye-candy, customizable, and reasonably lightweight.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">cool-retro-term.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://i.imgur.com/TNumkDn.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://i.imgur.com/hfjWOM4.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/Swordfish90/cool-retro-term</url>
+  <url type="bugtracker">https://github.com/Swordfish90/cool-retro-term/issues</url>
+
+  <provides>
+    <binary>cool-retro-term</binary>
+  </provides>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="2.0.0-beta2" date="2026-05-31" type="development"/>
+    <release version="2.0.0-beta1" date="2026-01-22" type="development"/>
+    <release version="0.9" date="2014-09-11"/>
+  </releases>
+</component>

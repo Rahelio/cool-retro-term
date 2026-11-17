@@ -39,4 +39,8 @@ add_subdirectory(app)
 if(UNIX AND NOT APPLE)
     install(FILES cool-retro-term.desktop
         DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+    install(FILES packaging/cool-retro-term.metainfo.xml
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
+    install(FILES packaging/cool-retro-term.1
+        DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
 endif()
