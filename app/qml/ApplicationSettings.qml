@@ -52,6 +52,7 @@ QtObject {
     property real burnInQuality: 0.5
 
     property bool blinkingCursor: false
+    property real scrollSpeed: 1.0
 
 
     // PROFILE SETTINGS ///////////////////////////////////////////////////////
@@ -198,6 +199,7 @@ QtObject {
             "lineSpacing": lineSpacing,
             "margin": _margin,
             "blinkingCursor": blinkingCursor,
+            "scrollSpeed": scrollSpeed,
             "frameSize": _frameSize,
             "screenRadius": _screenRadius,
             "frameColor": _frameColor,
@@ -309,6 +311,7 @@ QtObject {
         _frameShininess = settings.frameShininess !== undefined ? settings.frameShininess : _frameShininess
 
         blinkingCursor = settings.blinkingCursor !== undefined ? settings.blinkingCursor : blinkingCursor
+        scrollSpeed = settings.scrollSpeed !== undefined ? settings.scrollSpeed : scrollSpeed
     }
 
     function storeCustomProfiles() {

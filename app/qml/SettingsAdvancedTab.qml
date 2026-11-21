@@ -59,6 +59,24 @@ ColumnLayout {
                 checked: appSettings.blinkingCursor
                 onCheckedChanged: appSettings.blinkingCursor = checked
             }
+            RowLayout {
+                Layout.fillWidth: true
+                Label {
+                    text: qsTr("Scroll Speed")
+                }
+                Slider {
+                    id: scrollSpeedSlider
+                    Layout.fillWidth: true
+                    from: 0.1
+                    to: 3.0
+                    stepSize: 0.05
+                    value: appSettings.scrollSpeed
+                    onMoved: appSettings.scrollSpeed = value
+                }
+                SizedLabel {
+                    text: Math.round(scrollSpeedSlider.value * 100) + "%"
+                }
+            }
             CheckBox {
                 id: showMenubar
                 text: qsTr("Show Menubar")
