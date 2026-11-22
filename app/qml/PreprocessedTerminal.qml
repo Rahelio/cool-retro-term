@@ -226,7 +226,7 @@ Item{
                wheel.angleDelta.y > 0 ? zoomIn.trigger() : zoomOut.trigger();
             } else {
                 var coord = correctDistortion(wheel.x, wheel.y);
-                kterminal.simulateWheel(coord.x, coord.y, wheel.buttons, wheel.modifiers, wheel.angleDelta);
+                kterminal.simulateWheel(coord.x, coord.y, wheel.buttons, wheel.modifiers, wheel.angleDelta, wheel.pixelDelta);
             }
         }
         onDoubleClicked: function(mouse) {
