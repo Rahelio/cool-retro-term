@@ -125,11 +125,14 @@ add_custom_command(TARGET qmltermwidget POST_BUILD
     VERBATIM
 )
 
-if(NOT APPLE)
+if(APPLE)
+    # Inside the bundle, found through the ../PlugIns import path in main.cpp.
+    set(QTW_INSTALL_DIR "cool-retro-term.app/Contents/PlugIns/QMLTermWidget")
+else()
     set(QTW_INSTALL_DIR "${QT6_INSTALL_QML}/QMLTermWidget")
-    install(TARGETS qmltermwidget LIBRARY DESTINATION "${QTW_INSTALL_DIR}")
-    install(FILES "${QTW_SRC}/qmldir" "${QTW_SRC}/QMLTermScrollbar.qml"
-        DESTINATION "${QTW_INSTALL_DIR}")
-    install(DIRECTORY "${QTW_LIB}/color-schemes" "${QTW_LIB}/kb-layouts"
-        DESTINATION "${QTW_INSTALL_DIR}")
 endif()
+install(TARGETS qmltermwidget LIBRARY DESTINATION "${QTW_INSTALL_DIR}")
+install(FILES "${QTW_SRC}/qmldir" "${QTW_SRC}/QMLTermScrollbar.qml"
+    DESTINATION "${QTW_INSTALL_DIR}")
+install(DIRECTORY "${QTW_LIB}/color-schemes" "${QTW_LIB}/kb-layouts"
+    DESTINATION "${QTW_INSTALL_DIR}")

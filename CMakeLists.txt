@@ -5,6 +5,11 @@ project(cool-retro-term LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# On macOS the install target is the app bundle; /usr is protected by SIP.
+if(APPLE AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/Applications" CACHE PATH "Install prefix" FORCE)
+endif()
+
 include(GNUInstallDirs)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS

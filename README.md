@@ -63,6 +63,8 @@ cmake --build build -j
 
 If you already cloned without `--recursive`, run `git submodule update --init --recursive` first. If Qt is not in a standard location, pass `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.x/<platform>`. To build without utf8proc, pass `-DUSE_UTF8PROC=OFF`.
 
+When you pull updates, also update the submodules with `git submodule update --init --recursive`, or pull with `git pull --recurse-submodules`. Otherwise the build can mix a new interface with an old terminal plugin, and the app quits at startup. Running `git config submodule.recurse true` once makes `git pull` do this automatically.
+
 Only one instance runs at a time: starting cool-retro-term again opens a new window in the running instance. To try a fresh build while an installed copy is running, quit the installed copy first.
 
 To install system-wide (the binary, the QML plugin, the desktop file, icons, the man page and the AppStream metadata):
@@ -72,6 +74,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build build -j
 sudo cmake --install build
 ```
+
+On macOS, leave out `CMAKE_INSTALL_PREFIX`: it defaults to `/Applications` and the install puts `cool-retro-term.app` there, with the QML plugin inside the bundle. Don't use `/usr`, because System Integrity Protection blocks writes there even with `sudo`. Admin users don't need `sudo` to install into `/Applications`. The installed app links against your local Qt (for example Homebrew's `qt`). To get a self-contained app, use `scripts/build-dmg.sh`.
 
 `scripts/build-appimage.sh` and `scripts/build-dmg.sh` produce the Linux AppImage and macOS DMG release packages.
 
